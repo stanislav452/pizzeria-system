@@ -1,52 +1,158 @@
+import java.util.Objects;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        try (Scanner scanner = new Scanner(System.in)) {
+            run(scanner);
+        }
+    }
 
-        System.out.print("Введіть назву піци: ");
-        String pizzaName = scanner.nextLine();
-
-        System.out.print("Введіть ціну за одиницю (грн): ");
-        double unitPrice = scanner.nextDouble();
-
-        System.out.print("Введіть кількість (шт): ");
-        int quantity = scanner.nextInt();
-
-        System.out.print("Введіть діаметр піци (см): ");
-        int diameterCm = scanner.nextInt();
-
-        System.out.print("Чи потрібен додатковий соус? (true/false): ");
-        boolean includesSauce = scanner.nextBoolean();
-
-        double baseTotal = unitPrice * quantity;
-        if (includesSauce) {
-            baseTotal += 25.0 * quantity;
+    private static void run(Scanner scanner) {
+        System.out.print("Введіть кількість замовлень: ");
+        int orderCount = scanner.nextInt();
+        scanner.nextLine();
+        if (orderCount <= 0) {
+            System.out.println("Кількість замовлень має бути більшою за нуль.");
+            return;
         }
 
+        PizzaOrder[] orders = new PizzaOrder[orderCount];
+        for (int i = 0; i < orders.length; i++) {
+            System.out.printf("%nЗамовлення %d з %d%n", i + 1, orderCount);
+            orders[i] = readOrder(scanner);
+        }
+
+        System.out.println("\nУсі замовлення:");
+        for (PizzaOrder order : orders) {
+            System.out.println(order);
+        }
+
+        System.out.print("\nПорахувати замовлення з ціною за піцу меншою за (грн): ");
+        double priceLimit = scanner.nextDouble();
+        int cheaperOrderCount = 0;
+        for (PizzaOrder order : orders) {
+            if (order.getUnitPrice() < priceLimit) {
+                cheaperOrderCount++;
+            }
+        }
+        System.out.printf("Кількість таких замовлень: %d%n", cheaperOrderCount);
+
+        System.out.println("\nДо сортування за ціною піци:");
+        printOrders(orders);
+        bubbleSortByUnitPrice(orders);
+        System.out.println("\nПісля сортування за ціною піци (за зростанням):");
+        printOrders(orders);
+
+        scanner.nextLine();
+        System.out.println("\nВведіть усі поля замовлення для пошуку:");
+        PizzaOrder sample = readOrder(scanner);
+        PizzaOrder foundOrder = findOrder(orders, sample);
+        if (foundOrder == null) {
+            System.out.println("Замовлення з такими полями не знайдено.");
+        } else {
+            System.out.println("Знайдено: " + foundOrder);
+        }
+
+    }
+
+    private static PizzaOrder readOrder(Scanner scanner) {
+        System.out.print("Назва піци: ");
+        String pizzaName = scanner.nextLine();
+        System.out.print("Ціна за одиницю (грн): ");
+        double unitPrice = scanner.nextDouble();
+        System.out.print("Кількість (шт): ");
+        int quantity = scanner.nextInt();
+        System.out.print("Діаметр піци (см): ");
+        int diameterCm = scanner.nextInt();
+        System.out.print("Додатковий соус (true/false): ");
+        boolean includesSauce = scanner.nextBoolean();
+        scanner.nextLine();
+        return new PizzaOrder(pizzaName, unitPrice, quantity, diameterCm, includesSauce);
+    }
+
+    private static void printOrders(PizzaOrder[] orders) {
+        for (PizzaOrder order : orders) {
+            System.out.println(order);
+        }
+    }
+
+    private static void bubbleSortByUnitPrice(PizzaOrder[] orders) {
+        for (int i = 0; i < orders.length - 1; i++) {
+            for (int j = 0; j < orders.length - 1 - i; j++) {
+                if (orders[j].getUnitPrice() > orders[j + 1].getUnitPrice()) {
+                    PizzaOrder temporary = orders[j];
+                    orders[j] = orders[j + 1];
+                    orders[j + 1] = temporary;
+                }
+            }
+        }
+    }
+
+    private static PizzaOrder findOrder(PizzaOrder[] orders, PizzaOrder sample) {
+        int index = 0;
+        while (index < orders.length) {
+            if (orders[index].equals(sample)) {
+                return orders[index];
+            }
+            index++;
+        }
+        return null;
+    }
+}
+
+class PizzaOrder {
+    private final String pizzaName;
+    private final double unitPrice;
+    private final int quantity;
+    private final int diameterCm;
+    private final boolean includesSauce;
+
+    PizzaOrder(String pizzaName, double unitPrice, int quantity, int diameterCm, boolean includesSauce) {
+        this.pizzaName = pizzaName;
+        this.unitPrice = unitPrice;
+        this.quantity = quantity;
+        this.diameterCm = diameterCm;
+        this.includesSauce = includesSauce;
+    }
+
+    double getUnitPrice() {
+        return unitPrice;
+    }
+
+    @Override
+    public String toString() {
+        double total = (unitPrice + (includesSauce ? 25.0 : 0.0)) * quantity;
         double discountRate = 0.0;
-        if (quantity >= 3 || baseTotal >= 600.0) {
+        if (quantity >= 3 || total >= 600.0) {
             discountRate = 0.15;
         } else if (quantity == 2) {
             discountRate = 0.05;
         }
+        return String.format(
+                "%s (%d см), ціна: %.2f грн/шт, кількість: %d, соус: %s, сума: %.2f грн",
+                pizzaName, diameterCm, unitPrice, quantity, includesSauce ? "так" : "ні",
+                total * (1.0 - discountRate));
+    }
 
-        double discountAmount = baseTotal * discountRate;
-        double finalTotal = baseTotal - discountAmount;
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof PizzaOrder)) {
+            return false;
+        }
+        PizzaOrder order = (PizzaOrder) other;
+        return Double.compare(unitPrice, order.unitPrice) == 0
+                && quantity == order.quantity
+                && diameterCm == order.diameterCm
+                && includesSauce == order.includesSauce
+                && Objects.equals(pizzaName, order.pizzaName);
+    }
 
-        System.out.println("\n==========================================");
-        System.out.println("           ЕЛЕКТРОННЕ МЕНЮ ПІЦЕРІЇ        ");
-        System.out.println("==========================================");
-        System.out.printf("Позиція:            %s (%d см)%n", pizzaName, diameterCm);
-        System.out.printf("Ціна за шт:         %.2f грн%n", unitPrice);
-        System.out.printf("Кількість:          %d шт%n", quantity);
-        System.out.printf("Додатковий соус:    %s%n", includesSauce ? "Так (+25 грн/шт)" : "Ні");
-        System.out.println("------------------------------------------");
-        System.out.printf("Сума без знижки:    %.2f грн%n", baseTotal);
-        System.out.printf("Знижка (%d%%):        -%.2f грн%n", (int)(discountRate * 100), discountAmount);
-        System.out.printf("РАЗОМ ДО СПЛАТИ:    %.2f грн%n", finalTotal);
-        System.out.println("==========================================");
-
-        scanner.close();
+    @Override
+    public int hashCode() {
+        return Objects.hash(pizzaName, unitPrice, quantity, diameterCm, includesSauce);
     }
 }
