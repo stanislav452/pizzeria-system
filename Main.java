@@ -1,20 +1,30 @@
 import java.util.Objects;
+import java.util.InputMismatchException;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
         try (Scanner scanner = new Scanner(System.in)) {
             run(scanner);
+        } catch (InputMismatchException e) {
+            System.out.println("Помилка введення: перевірте тип введеного значення.");
+        } catch (NoSuchElementException e) {
+            System.out.println("Помилка введення: не отримано потрібне значення.");
+        } catch (DomainException e) {
+            System.out.printf("Помилка замовлення: %s. Некоректне значення: %s%n",
+                    e.getMessage(), e.getInvalidValue());
+        } finally {
+            System.out.println("Завершення роботи програми.");
         }
     }
 
-    private static void run(Scanner scanner) {
+    private static void run(Scanner scanner) throws DomainException {
         System.out.print("Введіть кількість замовлень: ");
         int orderCount = scanner.nextInt();
         scanner.nextLine();
         if (orderCount <= 0) {
-            System.out.println("Кількість замовлень має бути більшою за нуль.");
-            return;
+            throw new InvalidQuantityException(orderCount);
         }
 
         PizzaOrder[] orders = new PizzaOrder[orderCount];
@@ -56,7 +66,7 @@ public class Main {
 
     }
 
-    private static PizzaOrder readOrder(Scanner scanner) {
+    private static PizzaOrder readOrder(Scanner scanner) throws DomainException {
         System.out.print("Назва піци: ");
         String pizzaName = scanner.nextLine();
         System.out.print("Ціна за одиницю (грн): ");
@@ -68,7 +78,12 @@ public class Main {
         System.out.print("Додатковий соус (true/false): ");
         boolean includesSauce = scanner.nextBoolean();
         scanner.nextLine();
-        return new PizzaOrder(pizzaName, unitPrice, quantity, diameterCm, includesSauce);
+        try {
+            return new PizzaOrder(pizzaName, unitPrice, quantity, diameterCm, includesSauce);
+        } catch (DomainException e) {
+            System.out.println("Перевірка даних замовлення не пройдена; передаю помилку далі.");
+            throw e;
+        }
     }
 
     private static void printOrders(PizzaOrder[] orders) {
@@ -108,7 +123,14 @@ class PizzaOrder {
     private final int diameterCm;
     private final boolean includesSauce;
 
-    PizzaOrder(String pizzaName, double unitPrice, int quantity, int diameterCm, boolean includesSauce) {
+    PizzaOrder(String pizzaName, double unitPrice, int quantity, int diameterCm, boolean includesSauce)
+            throws DomainException {
+        if (!Double.isFinite(unitPrice) || unitPrice <= 0) {
+            throw new InvalidPriceException(unitPrice);
+        }
+        if (quantity <= 0) {
+            throw new InvalidQuantityException(quantity);
+        }
         this.pizzaName = pizzaName;
         this.unitPrice = unitPrice;
         this.quantity = quantity;
@@ -154,5 +176,30 @@ class PizzaOrder {
     @Override
     public int hashCode() {
         return Objects.hash(pizzaName, unitPrice, quantity, diameterCm, includesSauce);
+    }
+}
+
+class DomainException extends Exception {
+    private final String invalidValue;
+
+    DomainException(String message, String invalidValue) {
+        super(message);
+        this.invalidValue = invalidValue;
+    }
+
+    String getInvalidValue() {
+        return invalidValue;
+    }
+}
+
+class InvalidPriceException extends DomainException {
+    InvalidPriceException(double price) {
+        super("ціна піци має бути додатною та скінченною", String.valueOf(price));
+    }
+}
+
+class InvalidQuantityException extends DomainException {
+    InvalidQuantityException(int quantity) {
+        super("кількість має бути більшою за нуль", String.valueOf(quantity));
     }
 }
