@@ -16,7 +16,7 @@
 ## Інструкція запуску
 
 ```bash
-javac Main.java
+javac *.java
 java Main
 ```
 
@@ -29,7 +29,7 @@ java Main
 ### Запуск ЛР2
 
 ```bash
-javac Main.java
+javac *.java
 java Main
 ```
 
@@ -37,14 +37,16 @@ java Main
 
 ## Лабораторна робота №3: Обробка винятків
 
+Класи розміщені в окремих файлах: `Main.java` відповідає за консольний сценарій, `PizzaOrder.java` — за модель замовлення, а `DomainException.java`, `InvalidPriceException.java` та `InvalidQuantityException.java` — за ієрархію доменних винятків.
+
 Клас `PizzaOrder` перевіряє, що ціна є додатною та скінченною, а кількість піц — більшою за нуль. Для порушень створені checked-винятки `InvalidPriceException` та `InvalidQuantityException`, що успадковуються від `DomainException` і зберігають некоректне значення.
 
-Помилки введення обробляються окремими `catch`-блоками. `readOrder` частково обробляє доменний виняток і повторно кидає його для обробки в `main`; `finally` закриває `Scanner`.
+Помилки введення обробляються окремими `catch`-блоками. `readOrder` частково обробляє доменний виняток і повторно кидає його для обробки в `main`; `finally` виводить повідомлення про завершення, а `Scanner` закривається через try-with-resources.
 
 ### Запуск ЛР3
 
 ```bash
-javac Main.java
+javac *.java
 java Main
 ```
 
