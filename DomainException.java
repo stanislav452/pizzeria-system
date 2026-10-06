@@ -1,4 +1,4 @@
-public class DomainException extends Exception {
+public class DomainException extends RuntimeException {
     private final String invalidValue;
 
     public DomainException(String message, String invalidValue) {

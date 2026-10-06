@@ -18,7 +18,7 @@ public class Main {
         }
     }
 
-    private static void run(Scanner scanner) throws DomainException {
+    private static void run(Scanner scanner)  {
         System.out.print("Введіть кількість замовлень: ");
         int orderCount = scanner.nextInt();
         scanner.nextLine();
@@ -36,6 +36,7 @@ public class Main {
         for (PizzaOrder order : orders) {
             System.out.println(order);
         }
+        demonstratePricingStrategies(orders);
 
         System.out.print("\nПорахувати замовлення з ціною за піцу меншою за (грн): ");
         double priceLimit = scanner.nextDouble();
@@ -89,6 +90,33 @@ public class Main {
         for (PizzaOrder order : orders) {
             System.out.println(order);
         }
+    }
+
+    private static void demonstratePricingStrategies(PizzaOrder[] orders) {
+        OrderPricingStrategy[] strategies = {
+                new StandardOrderPricingStrategy(),
+                new HappyHourPricingStrategy()
+        };
+
+        System.out.println("\nРозрахунок замовлень різними стратегіями:");
+        for (PizzaOrder order : orders) {
+            System.out.println(order);
+            for (OrderPricingStrategy strategy : strategies) {
+                System.out.printf("%s: %.2f грн%n",
+                        strategy.getName(), strategy.calculateTotal(order));
+                if (strategy instanceof PromotionDescription) {
+                    PromotionDescription promotion = (PromotionDescription) strategy;
+                    System.out.println(promotion.getPromotionDescription());
+                }
+            }
+        }
+
+        OrderCheckout checkout = new OrderCheckout(strategies[0]);
+        System.out.printf("%nЗміна стратегії під час роботи програми (%s): %.2f грн%n",
+                checkout.getStrategyName(), checkout.calculateTotal(orders[0]));
+        checkout.setPricingStrategy(strategies[1]);
+        System.out.printf("Після зміни стратегії (%s): %.2f грн%n",
+                checkout.getStrategyName(), checkout.calculateTotal(orders[0]));
     }
 
     private static void bubbleSortByUnitPrice(PizzaOrder[] orders) {

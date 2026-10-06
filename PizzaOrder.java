@@ -1,6 +1,8 @@
 import java.util.Objects;
 
 public class PizzaOrder {
+    private static final OrderPricingStrategy DEFAULT_PRICING_STRATEGY = new StandardOrderPricingStrategy();
+
     private final String pizzaName;
     private final double unitPrice;
     private final int quantity;
@@ -26,19 +28,21 @@ public class PizzaOrder {
         return unitPrice;
     }
 
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public boolean includesSauce() {
+        return includesSauce;
+    }
+
     @Override
     public String toString() {
-        double total = (unitPrice + (includesSauce ? 25.0 : 0.0)) * quantity;
-        double discountRate = 0.0;
-        if (quantity >= 3 || total >= 600.0) {
-            discountRate = 0.15;
-        } else if (quantity == 2) {
-            discountRate = 0.05;
-        }
+        double total = DEFAULT_PRICING_STRATEGY.calculateTotal(this);
         return String.format(
                 "%s (%d см), ціна: %.2f грн/шт, кількість: %d, соус: %s, сума: %.2f грн",
                 pizzaName, diameterCm, unitPrice, quantity, includesSauce ? "так" : "ні",
-                total * (1.0 - discountRate));
+                total);
     }
 
     @Override
