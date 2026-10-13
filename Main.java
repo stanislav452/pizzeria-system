@@ -37,6 +37,7 @@ public class Main {
             System.out.println(order);
         }
         demonstratePricingStrategies(orders);
+        demonstrateOrderStatusObservers(orders[0]);
 
         System.out.print("\nПорахувати замовлення з ціною за піцу меншою за (грн): ");
         double priceLimit = scanner.nextDouble();
@@ -94,8 +95,8 @@ public class Main {
 
     private static void demonstratePricingStrategies(PizzaOrder[] orders) {
         OrderPricingStrategy[] strategies = {
-                new StandardOrderPricingStrategy(),
-                new HappyHourPricingStrategy()
+                OrderPricingStrategyFactory.create(OrderPricingStrategyFactory.STANDARD),
+                OrderPricingStrategyFactory.create(OrderPricingStrategyFactory.HAPPY_HOUR)
         };
 
         System.out.println("\nРозрахунок замовлень різними стратегіями:");
@@ -117,6 +118,15 @@ public class Main {
         checkout.setPricingStrategy(strategies[1]);
         System.out.printf("Після зміни стратегії (%s): %.2f грн%n",
                 checkout.getStrategyName(), checkout.calculateTotal(orders[0]));
+    }
+
+    private static void demonstrateOrderStatusObservers(PizzaOrder order) {
+        order.addStatusListener(new OrderStatusLogger());
+        order.addStatusListener(new KitchenDisplayAdapter(new LegacyKitchenDisplay()));
+
+        System.out.println("\nДемонстрація сповіщення про зміну статусу:");
+        order.setStatus(OrderStatus.PREPARING);
+        order.setStatus(OrderStatus.READY);
     }
 
     private static void bubbleSortByUnitPrice(PizzaOrder[] orders) {

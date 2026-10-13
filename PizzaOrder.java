@@ -1,13 +1,18 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class PizzaOrder {
-    private static final OrderPricingStrategy DEFAULT_PRICING_STRATEGY = new StandardOrderPricingStrategy();
+    private static final OrderPricingStrategy DEFAULT_PRICING_STRATEGY =
+            OrderPricingStrategyFactory.create(OrderPricingStrategyFactory.STANDARD);
 
     private final String pizzaName;
     private final double unitPrice;
     private final int quantity;
     private final int diameterCm;
     private final boolean includesSauce;
+    private final List<OrderStatusListener> statusListeners = new ArrayList<>();
+    private OrderStatus status = OrderStatus.RECEIVED;
 
     public PizzaOrder(String pizzaName, double unitPrice, int quantity, int diameterCm, boolean includesSauce)
             throws DomainException {
@@ -28,12 +33,44 @@ public class PizzaOrder {
         return unitPrice;
     }
 
+    public String getPizzaName() {
+        return pizzaName;
+    }
+
     public int getQuantity() {
         return quantity;
     }
 
     public boolean includesSauce() {
         return includesSauce;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public void addStatusListener(OrderStatusListener listener) {
+        Objects.requireNonNull(listener, "Спостерігач не може бути null");
+        if (!statusListeners.contains(listener)) {
+            statusListeners.add(listener);
+        }
+    }
+
+    public void removeStatusListener(OrderStatusListener listener) {
+        statusListeners.remove(listener);
+    }
+
+    public void setStatus(OrderStatus newStatus) {
+        Objects.requireNonNull(newStatus, "Статус замовлення не може бути null");
+        if (status == newStatus) {
+            return;
+        }
+
+        OrderStatus previousStatus = status;
+        status = newStatus;
+        for (OrderStatusListener listener : new ArrayList<>(statusListeners)) {
+            listener.onStatusChanged(this, previousStatus, newStatus);
+        }
     }
 
     @Override
