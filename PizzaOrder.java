@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class PizzaOrder {
+public abstract sealed class PizzaOrder permits PickupOrder, DeliveryOrder {
     private static final OrderPricingStrategy DEFAULT_PRICING_STRATEGY =
             OrderPricingStrategyFactory.create(OrderPricingStrategyFactory.STANDARD);
 
@@ -14,53 +14,67 @@ public class PizzaOrder {
     private final List<OrderStatusListener> statusListeners = new ArrayList<>();
     private OrderStatus status = OrderStatus.RECEIVED;
 
-    public PizzaOrder(String pizzaName, double unitPrice, int quantity, int diameterCm, boolean includesSauce)
+    protected PizzaOrder(String pizzaName, double unitPrice, int quantity)
             throws DomainException {
+        this(pizzaName, unitPrice, quantity, 30, false);
+    }
+
+    protected PizzaOrder(String pizzaName, double unitPrice, int quantity, int diameterCm,
+                         boolean includesSauce) throws DomainException {
         if (!Double.isFinite(unitPrice) || unitPrice <= 0) {
             throw new InvalidPriceException(unitPrice);
         }
         if (quantity <= 0) {
             throw new InvalidQuantityException(quantity);
         }
-        this.pizzaName = pizzaName;
+        this.pizzaName = Objects.requireNonNull(pizzaName, "Назва піци не може бути null");
         this.unitPrice = unitPrice;
         this.quantity = quantity;
         this.diameterCm = diameterCm;
         this.includesSauce = includesSauce;
+        System.out.println("Конструктор PizzaOrder");
     }
 
-    public double getUnitPrice() {
+    public final double getUnitPrice() {
         return unitPrice;
     }
 
-    public String getPizzaName() {
+    public final String getPizzaName() {
         return pizzaName;
     }
 
-    public int getQuantity() {
+    public final int getQuantity() {
         return quantity;
     }
 
-    public boolean includesSauce() {
+    public final int getDiameterCm() {
+        return diameterCm;
+    }
+
+    public final boolean includesSauce() {
         return includesSauce;
     }
 
-    public OrderStatus getStatus() {
+    public final OrderStatus getStatus() {
         return status;
     }
 
-    public void addStatusListener(OrderStatusListener listener) {
+    public abstract String getFulfillmentDescription();
+
+    public abstract double getFulfillmentFee();
+
+    public final void addStatusListener(OrderStatusListener listener) {
         Objects.requireNonNull(listener, "Спостерігач не може бути null");
         if (!statusListeners.contains(listener)) {
             statusListeners.add(listener);
         }
     }
 
-    public void removeStatusListener(OrderStatusListener listener) {
+    public final void removeStatusListener(OrderStatusListener listener) {
         statusListeners.remove(listener);
     }
 
-    public void setStatus(OrderStatus newStatus) {
+    public final void setStatus(OrderStatus newStatus) {
         Objects.requireNonNull(newStatus, "Статус замовлення не може бути null");
         if (status == newStatus) {
             return;
@@ -87,7 +101,7 @@ public class PizzaOrder {
         if (this == other) {
             return true;
         }
-        if (!(other instanceof PizzaOrder)) {
+        if (other == null || getClass() != other.getClass()) {
             return false;
         }
         PizzaOrder order = (PizzaOrder) other;

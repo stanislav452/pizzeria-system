@@ -85,3 +85,59 @@ java Main
 ```
 
 Після введення замовлень програма покаже створення стратегій через фабрику та два послідовні переходи статусу, кожен з яких відображається у журналі й на адаптованому кухонному дисплеї.
+
+## Лабораторна робота №6: Наслідування та поліморфізм
+
+Модель замовлення розширено за предметною областю: замовлення може бути самовивозом, звичайною доставкою або експрес-доставкою. Це відношення «is-a»: `PickupOrder` і `DeliveryOrder` є різновидами `PizzaOrder`, а `ExpressDeliveryOrder` є різновидом `DeliveryOrder`. Створювати загальне замовлення без способу отримання не має змісту, тому `PizzaOrder` — абстрактний клас із приватними спільними полями, абстрактними методами опису отримання та його вартості.
+
+```mermaid
+classDiagram
+    PizzaOrder <|-- PickupOrder
+    PizzaOrder <|-- DeliveryOrder
+    DeliveryOrder <|-- ExpressDeliveryOrder
+    DeliveryOrder *-- DeliveryDetails
+    KitchenDisplayAdapter *-- LegacyKitchenDisplay
+    class PizzaOrder {
+        <<abstract sealed>>
+        -String pizzaName
+        -double unitPrice
+        -int quantity
+        -int diameterCm
+        -boolean includesSauce
+        +getFulfillmentDescription()* String
+        +getFulfillmentFee()* double
+    }
+    class PickupOrder {
+        -String pickupPoint
+    }
+    class DeliveryOrder {
+        <<sealed>>
+        -DeliveryDetails deliveryDetails
+    }
+    class ExpressDeliveryOrder {
+        -double expressFee
+    }
+    class DeliveryDetails {
+        -String address
+        -double deliveryFee
+    }
+```
+
+`PizzaOrder` запечатаний (`sealed`) і дозволяє лише `PickupOrder` та `DeliveryOrder`; останній теж запечатаний і дозволяє лише `ExpressDeliveryOrder`. Це дає компілятору змогу перевірити повноту pattern `switch` для всіх конкретних різновидів замовлення. Цикл за `PizzaOrder[]` викликає перевизначений опис отримання, а `instanceof` з pattern matching демонструє доступ до адреси через базове посилання. Його оголошений тип — `PizzaOrder`, динамічний тип під час виконання — фактичний клас об'єкта, наприклад `ExpressDeliveryOrder`.
+
+Конструктори підкласів делегують спільну ініціалізацію через `super(...)`; короткий конструктор `PickupOrder` делегує повному через `this(...)`. Повідомлення конструкторів ідуть від предка до нащадка (`PizzaOrder` → `DeliveryOrder` → `ExpressDeliveryOrder`), а повернення з конструктора, що делегував через `this(...)`, відбувається після конструктора-цілі. Діаметр, назва, кількість і поля вартості приватні; `PizzaOrder` є базою абстрактного класу й не має публічних mutable-полів.
+
+Для `equals()` обрано `getClass()`, а не `instanceof` у базовій перевірці: об'єкти різних підтипів замовлення не рівні, навіть якщо збігаються спільні поля. Підклас додає власні поля до рівності та `hashCode()`. Тому порівняння `PickupOrder` із `DeliveryOrder` дає `false` в обох напрямках — симетрія збережена. Використання лише `instanceof PizzaOrder` у базовому `equals()` могло б дати асиметрію, якщо підклас додає значущі поля.
+
+Композиція доречна для `DeliveryOrder` і `DeliveryDetails`: доставка **має** адресу та тариф, але доставка не **є** адресою. Наслідування від `DeliveryDetails` підмінило б сутність замовлення адресою і не дозволило б коректно моделювати кілька незалежних від замовлення значень доставки. `KitchenDisplayAdapter` так само **має** `LegacyKitchenDisplay` і делегує йому виведення; адаптер не є дисплеєм. `ExpressDeliveryOrder` перевизначає поведінку доставки та додає власну доплату. Конструктори й методи не допускають змінення стану через публічні поля; клас `PickupOrder` і leaf-клас `ExpressDeliveryOrder` оголошені `final`, оскільки додаткове наслідування від них у цій моделі не передбачене.
+
+### Запуск ЛР6
+
+Потрібен JDK 21 або новіший для `sealed`-класів і pattern matching у `switch`.
+
+```bash
+javac *.java
+java Main
+```
+
+Під час введення замовлення виберіть спосіб отримання: `1` — самовивіз, `2` — доставка або `3` — експрес-доставка. Для доставки введіть адресу й тариф; для експрес-доставки також введіть доплату. Вартість доставки додається до суми до застосування знижки. Ланцюжок конструкторів, поліморфний опис, доступ до специфічного методу та порівняння об'єктів різних підтипів демонструються в консолі.
