@@ -1,52 +1,56 @@
-import java.util.Scanner;
+import java.util.Collection;
 
 public class Main {
+    public static void printAll(Collection<? extends BaseEntity> items) {
+        for (BaseEntity item : items) {
+            System.out.println(item);
+        }
+    }
+
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        PizzaService pizzas = new InMemoryPizzaService();
+        pizzas.save(new Pizza(1, "Маргарита", 140.0, 32));
+        pizzas.save(new Pizza(2, "Пепероні", 180.0, 34));
+        pizzas.save(new Pizza(3, "Маргарита", 160.0, 28));
+        pizzas.save(new Pizza(4, "Чотири сири", 210.0, 36));
 
-        System.out.print("Введіть назву піци: ");
-        String pizzaName = scanner.nextLine();
+        System.out.println("Піци до сортування:");
+        printAll(pizzas.findAll());
+        System.out.println("\nПіци за назвою:");
+        printAll(pizzas.findAllSortedByName());
+        System.out.println("\nПіци за назвою та ціною:");
+        printAll(pizzas.findAllSortedByNameAndByPrice());
 
-        System.out.print("Введіть ціну за одиницю (грн): ");
-        double unitPrice = scanner.nextDouble();
+        int countBeforeUpdate = pizzas.findAll().size();
+        pizzas.save(new Pizza(1, "Маргарита", 150.0, 32));
+        System.out.println("\nОновлена піца: " + pizzas.findById(1));
+        System.out.println("Кількість до і після оновлення: " + countBeforeUpdate
+                + " і " + pizzas.findAll().size());
 
-        System.out.print("Введіть кількість (шт): ");
-        int quantity = scanner.nextInt();
+        pizzas.deleteById(4);
+        System.out.println("Після успішного видалення піци з id=4:");
+        printAll(pizzas.findAll());
 
-        System.out.print("Введіть діаметр піци (см): ");
-        int diameterCm = scanner.nextInt();
-
-        System.out.print("Чи потрібен додатковий соус? (true/false): ");
-        boolean includesSauce = scanner.nextBoolean();
-
-        double baseTotal = unitPrice * quantity;
-        if (includesSauce) {
-            baseTotal += 25.0 * quantity;
+        try {
+            pizzas.deleteById(99);
+        } catch (EntityNotFoundException exception) {
+            System.out.println("Неуспішне видалення: " + exception.getMessage());
         }
 
-        double discountRate = 0.0;
-        if (quantity >= 3 || baseTotal >= 600.0) {
-            discountRate = 0.15;
-        } else if (quantity == 2) {
-            discountRate = 0.05;
+        try {
+            pizzas.findById(99);
+        } catch (EntityNotFoundException exception) {
+            System.out.println("Пошук: " + exception.getMessage());
         }
 
-        double discountAmount = baseTotal * discountRate;
-        double finalTotal = baseTotal - discountAmount;
+        OrderService orders = new InMemoryOrderService();
+        orders.save(new Order(10, "Замовлення", 3, true));
+        orders.save(new Order(11, "Самовивіз", 2, false));
+        orders.save(new Order(12, "Замовлення", 1, false));
 
-        System.out.println("\n==========================================");
-        System.out.println("           ЕЛЕКТРОННЕ МЕНЮ ПІЦЕРІЇ        ");
-        System.out.println("==========================================");
-        System.out.printf("Позиція:            %s (%d см)%n", pizzaName, diameterCm);
-        System.out.printf("Ціна за шт:         %.2f грн%n", unitPrice);
-        System.out.printf("Кількість:          %d шт%n", quantity);
-        System.out.printf("Додатковий соус:    %s%n", includesSauce ? "Так (+25 грн/шт)" : "Ні");
-        System.out.println("------------------------------------------");
-        System.out.printf("Сума без знижки:    %.2f грн%n", baseTotal);
-        System.out.printf("Знижка (%d%%):        -%.2f грн%n", (int)(discountRate * 100), discountAmount);
-        System.out.printf("РАЗОМ ДО СПЛАТИ:    %.2f грн%n", finalTotal);
-        System.out.println("==========================================");
-
-        scanner.close();
+        System.out.println("\nЗамовлення до сортування:");
+        printAll(orders.findAll());
+        System.out.println("Замовлення за назвою та кількістю піц:");
+        printAll(orders.findAllSortedByNameAndByQuantity());
     }
 }
