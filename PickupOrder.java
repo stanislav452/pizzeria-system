@@ -16,38 +16,20 @@ public final class PickupOrder extends PizzaOrder {
         System.out.println("Конструктор PickupOrder через super(...)");
     }
 
-    public String getPickupPoint() {
-        return pickupPoint;
+    public PickupOrder(long id, String pizzaName, double unitPrice, int quantity, int diameterCm,
+                       boolean includesSauce, String pickupPoint) {
+        super(id, pizzaName, unitPrice, quantity, diameterCm, includesSauce);
+        this.pickupPoint = Objects.requireNonNull(pickupPoint, "Пункт самовивозу не може бути null");
     }
 
-    @Override
-    public String getFulfillmentDescription() {
-        return "самовивіз із пункту «" + pickupPoint + "»";
-    }
+    public String getPickupPoint() { return pickupPoint; }
 
     @Override
-    public double getFulfillmentFee() {
-        return 0.0;
-    }
+    public String getFulfillmentDescription() { return "самовивіз із пункту «" + pickupPoint + "»"; }
 
     @Override
-    public String toString() {
-        return super.toString() + ", " + getFulfillmentDescription();
-    }
+    public double getFulfillmentFee() { return 0.0; }
 
     @Override
-    public boolean equals(Object other) {
-        if (this == other) {
-            return true;
-        }
-        if (!(other instanceof PickupOrder order)) {
-            return false;
-        }
-        return super.equals(other) && Objects.equals(pickupPoint, order.pickupPoint);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), pickupPoint);
-    }
+    public String toString() { return super.toString() + ", " + getFulfillmentDescription() + "}"; }
 }

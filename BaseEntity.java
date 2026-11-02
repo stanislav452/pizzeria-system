@@ -9,23 +9,16 @@ public abstract class BaseEntity {
         this.name = Objects.requireNonNull(name, "name не може бути null");
     }
 
-    public final long getId() {
-        return id;
-    }
-
-    public final String getName() {
-        return name;
-    }
+    public final long getId() { return id; }
+    public final String getName() { return name; }
 
     @Override
-    public boolean equals(Object other) {
+    public final boolean equals(Object other) {
         if (this == other) return true;
         if (!(other instanceof BaseEntity)) return false;
         return id == ((BaseEntity) other).id;
     }
 
     @Override
-    public int hashCode() {
-        return Long.hashCode(id);
-    }
+    public final int hashCode() { return Long.hashCode(id); }
 }
