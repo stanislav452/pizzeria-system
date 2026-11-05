@@ -1,3 +1,9 @@
+# Maven
+target/
+
+# H2 database files (generated at runtime)
+data/
+
 # Compiled class file
 *.class
 
