@@ -33,15 +33,11 @@ mvn compile
 mvn exec:java -Dexec.mainClass=ua.edu.pizzeria.Main
 ```
 
-Введіть кількість замовлень, дані кожного замовлення, поріг ціни та всі поля замовлення для перевірки пошуку. Для соусу введіть `true` або `false`.
-
 ## Лабораторна робота №3: Обробка винятків
 
 Класи розміщені в окремих файлах: `Main.java` відповідає за консольний сценарій, `PizzaOrder.java` — за модель замовлення, а `DomainException.java`, `InvalidPriceException.java` та `InvalidQuantityException.java` — за ієрархію доменних винятків.
 
 Клас `PizzaOrder` перевіряє, що ціна є додатною та скінченною, а кількість піц — більшою за нуль. Для порушень створені винятки `InvalidPriceException` та `InvalidQuantityException`, що успадковуються від `DomainException` і зберігають некоректне значення.
-
-Помилки введення обробляються окремими `catch`-блоками. `readOrder` частково обробляє доменний виняток і повторно кидає його для обробки в `main`; `finally` виводить повідомлення про завершення, а `Scanner` закривається через try-with-resources.
 
 ### Запуск ЛР3
 
@@ -50,13 +46,11 @@ mvn compile
 mvn exec:java -Dexec.mainClass=ua.edu.pizzeria.Main
 ```
 
-Введіть дані замовлення у відповідь на підказки. Якщо введено текст замість числа, від'ємну/нульову кількість або недопустиму ціну, програма виведе відповідне повідомлення.
-
 ## Лабораторна робота №4: Інтерфейси та патерн Strategy
 
 Для замовлень піцерії поведінку розрахунку вартості винесено в інтерфейс `OrderPricingStrategy`. `StandardOrderPricingStrategy` зберігає звичні правила знижок, а `HappyHourPricingStrategy` застосовує знижку 10%. Масив стратегій демонструє поліморфне виконання; `OrderCheckout` приймає стратегію та дозволяє змінити її під час роботи програми.
 
-`AbstractOrderPricingStrategy` частково реалізує контракт і надає спільні методи обчислення суми та знижки. `HappyHourPricingStrategy` додатково реалізує інтерфейс `PromotionDescription`, щоб окремо надавати опис акції. У `OrderPricingStrategy` є default-метод із назвою за замовчуванням. Виведення замовлення використовує стандартну стратегію, тому раніше визначені правила ціни та знижок збережені.
+`AbstractOrderPricingStrategy` частково реалізує контракт і надає спільні методи обчислення суми та знижки. `HappyHourPricingStrategy` додатково реалізує інтерфейс `PromotionDescription`, щоб окремо надавати опис акції. У `OrderPricingStrategy` є default-метод із назвою за замовчуванням.
 
 ### Запуск ЛР4
 
@@ -65,17 +59,11 @@ mvn compile
 mvn exec:java -Dexec.mainClass=ua.edu.pizzeria.Main
 ```
 
-Після введення замовлень програма покаже суму за обома стратегіями, опис акції та зміну стратегії в контексті `OrderCheckout`.
-
 ## Лабораторна робота №5: GoF-патерни Factory Method, Observer та Adapter
 
-Рефакторинг продовжує проєкт електронного меню піцерії з ЛР №1–4:
-
-- `OrderPricingStrategyFactory` створює стандартну або акційну стратегію за кодом. Клієнтський код і `PizzaOrder` більше не створюють конкретні стратегії безпосередньо; новий тип стратегії підключається в одному місці.
+- `OrderPricingStrategyFactory` створює стандартну або акційну стратегію за кодом.
 - `PizzaOrder` є суб'єктом Observer: при зміні статусу він повідомляє підписані `OrderStatusListener`. У демонстрації на одне замовлення підписані журнал (`OrderStatusLogger`) і кухонний дисплей.
-- `KitchenDisplayAdapter` адаптує події очікуваного інтерфейсу `OrderStatusListener` до API `LegacyKitchenDisplay`, який приймає назву замовлення і текст статусу окремими аргументами. Несумісний клас не змінюється; його можна замінити зовнішньою системою дисплея без змін моделі замовлення.
-
-Це саме Adapter, оскільки він реалізує інтерфейс, потрібний системі замовлень, і делегує виклик іншому API, перетворюючи аргументи події. Переписування класу дисплея змінило б його API та змусило б залежний код знати про несумісну реалізацію.
+- `KitchenDisplayAdapter` адаптує події очікуваного інтерфейсу `OrderStatusListener` до API `LegacyKitchenDisplay`, який приймає назву замовлення і текст статусу окремими аргументами.
 
 ### Запуск ЛР5
 
@@ -84,99 +72,68 @@ mvn compile
 mvn exec:java -Dexec.mainClass=ua.edu.pizzeria.Main
 ```
 
-Після введення замовлень програма покаже створення стратегій через фабрику та два послідовні переходи статусу, кожен з яких відображається у журналі й на адаптованому кухонному дисплеї.
-
 ## Лабораторна робота №6: Наслідування та поліморфізм
 
-Модель замовлення розширено за предметною областю: замовлення може бути самовивозом, звичайною доставкою або експрес-доставкою. Це відношення «is-a»: `PickupOrder` і `DeliveryOrder` є різновидами `PizzaOrder`, а `ExpressDeliveryOrder` є різновидом `DeliveryOrder`. Створювати загальне замовлення без способу отримання не має змісту, тому `PizzaOrder` — абстрактний клас із приватними спільними полями, абстрактними методами опису отримання та його вартості.
-
-```mermaid
-classDiagram
-    PizzaOrder <|-- PickupOrder
-    PizzaOrder <|-- DeliveryOrder
-    DeliveryOrder <|-- ExpressDeliveryOrder
-    DeliveryOrder *-- DeliveryDetails
-    KitchenDisplayAdapter *-- LegacyKitchenDisplay
-    class PizzaOrder {
-        <<abstract sealed>>
-        -String pizzaName
-        -double unitPrice
-        -int quantity
-        -int diameterCm
-        -boolean includesSauce
-        +getFulfillmentDescription()* String
-        +getFulfillmentFee()* double
-    }
-    class PickupOrder {
-        -String pickupPoint
-    }
-    class DeliveryOrder {
-        <<sealed>>
-        -DeliveryDetails deliveryDetails
-    }
-    class ExpressDeliveryOrder {
-        -double expressFee
-    }
-    class DeliveryDetails {
-        -String address
-        -double deliveryFee
-    }
-```
-
-`PizzaOrder` запечатаний (`sealed`) і дозволяє лише `PickupOrder` та `DeliveryOrder`; останній теж запечатаний і дозволяє лише `ExpressDeliveryOrder`. Це дає компілятору змогу перевірити повноту pattern `switch` для всіх конкретних різновидів замовлення. Цикл за `PizzaOrder[]` викликає перевизначений опис отримання, а `instanceof` з pattern matching демонструє доступ до адреси через базове посилання. Його оголошений тип — `PizzaOrder`, динамічний тип під час виконання — фактичний клас об'єкта, наприклад `ExpressDeliveryOrder`.
-
-Конструктори підкласів делегують спільну ініціалізацію через `super(...)`; короткий конструктор `PickupOrder` делегує повному через `this(...)`. Повідомлення конструкторів ідуть від предка до нащадка (`PizzaOrder` → `DeliveryOrder` → `ExpressDeliveryOrder`), а повернення з конструктора, що делегував через `this(...)`, відбувається після конструктора-цілі. Діаметр, назва, кількість і поля вартості приватні; `PizzaOrder` є базою абстрактного класу й не має публічних mutable-полів.
-
-Для `equals()` обрано `getClass()`, а не `instanceof` у базовій перевірці: об'єкти різних підтипів замовлення не рівні, навіть якщо збігаються спільні поля. Підклас додає власні поля до рівності та `hashCode()`. Тому порівняння `PickupOrder` із `DeliveryOrder` дає `false` в обох напрямках — симетрія збережена. Використання лише `instanceof PizzaOrder` у базовому `equals()` могло б дати асиметрію, якщо підклас додає значущі поля.
-
-Композиція доречна для `DeliveryOrder` і `DeliveryDetails`: доставка **має** адресу та тариф, але доставка не **є** адресою. Наслідування від `DeliveryDetails` підмінило б сутність замовлення адресою і не дозволило б коректно моделювати кілька незалежних від замовлення значень доставки. `KitchenDisplayAdapter` так само **має** `LegacyKitchenDisplay` і делегує йому виведення; адаптер не є дисплеєм. `ExpressDeliveryOrder` перевизначає поведінку доставки та додає власну доплату. Конструктори й методи не допускають змінення стану через публічні поля; клас `PickupOrder` і leaf-клас `ExpressDeliveryOrder` оголошені `final`, оскільки додаткове наслідування від них у цій моделі не передбачене.
+Модель замовлення розширено за предметною областю: замовлення може бути самовивозом, звичайною доставкою або експрес-доставкою. Це відношення «is-a»: `PickupOrder` і `DeliveryOrder` є різновидами `PizzaOrder`, а `ExpressDeliveryOrder` є різновидом `DeliveryOrder`. `PizzaOrder` — абстрактний `sealed`-клас, який дозволяє лише `PickupOrder` та `DeliveryOrder`; останній теж `sealed` і дозволяє лише `ExpressDeliveryOrder`.
 
 ### Запуск ЛР6
 
-Потрібен JDK 21 або новіший для `sealed`-класів і pattern matching у `switch`.
+Потрібен JDK 21 або новіший.
 
 ```bash
 mvn compile
 mvn exec:java -Dexec.mainClass=ua.edu.pizzeria.Main
 ```
 
-Під час введення замовлення виберіть спосіб отримання: `1` — самовивіз, `2` — доставка або `3` — експрес-доставка. Для доставки введіть адресу й тариф; для експрес-доставки також введіть доплату. Вартість доставки додається до суми до застосування знижки. Ланцюжок конструкторів, поліморфний опис, доступ до специфічного методу та порівняння об'єктів різних підтипів демонструються в консолі.
+## Лабораторна робота №7–9: Генеральний CRUD та сховище в пам'яті
 
-# Лабораторна робота №10: Maven як інструмент побудови проєкту. JDBC
+Створено інтерфейс `CRUDService<T extends BaseEntity>` з реалізацією `InMemoryCrudService<T>` (колекції), спеціалізовані сервіси `PizzaService`, `OrderService`, `PizzaOrderService` та їх in-memory-реалізації. `BaseEntity` містить незмінні `id` та `name`; `equals`/`hashCode` побудовані за `id`.
 
-Гілка: **`lr10/maven-jdbc`**. Pull Request створюється в `main` і **не зливається**.
+### Запуск ЛР7–9
 
-Проєкт ЛР №1–9 перетворено на Maven-проєкт зі стандартною структурою. Усі попередні класи та консольний сценарій збережені, але тепер вони лежать у пакеті `ua.edu.pizzeria` і збираються Maven. Сховище в пам'яті не видалене: `InMemoryPizzaService` і надалі працює, а поруч з'явилася JDBC-реалізація тих самих інтерфейсів.
-
-## Структура проєкту
-
-```text
-pizzeria-system/
-├── pom.xml
-├── src/main/java/ua/edu/pizzeria/      # усі класи ЛР №1–10
-├── src/main/resources/
-│   ├── application.properties           # URL, користувач, пароль, налаштування пулу
-│   └── init.sql                         # DDL + ідемпотентні стартові дані
-├── data/                                # файли H2 (створюються під час запуску, у .gitignore)
-└── README.md
+```bash
+mvn compile
+mvn exec:java -Dexec.mainClass=ua.edu.pizzeria.Main
 ```
 
-Основні нові класи:
+## Лабораторна робота №10: Maven + JDBC
 
-| Клас | Призначення |
-|---|---|
-| `DBConnection` | Singleton, що тримає `HikariDataSource` (пул з'єднань) |
-| `DatabaseInitializer` | автоматично виконує `init.sql` при старті |
-| `JdbcPizzaService` | JDBC-реалізація `PizzaService` (рівень 1) |
-| `AbstractJdbcCrudService<T>` | спільна JDBC-логіка за Template Method (рівень 3) |
-| `JdbcOrderService` | друга сутність через `AbstractJdbcCrudService` |
-| `JdbcOrderPlacementService` | транзакція на дві таблиці з `commit`/`rollback` |
-| `JdbcBatchDemo` | вимірювання одиночної та пакетної вставки |
-| `JdbcDemo` | точка входу для демонстрації ЛР №10 |
+Проєкт перетворено на Maven-проєкт зі стандартною структурою (`src/main/java`, `src/main/resources`). Усі класи переміщені в пакет `ua.edu.pizzeria`. Сховище в пам'ять не видалено — поруч з'явилася JDBC-реалізація тих самих інтерфейсів.
 
-## Сутності та схема БД
+### Запуск з нуля
 
-Обрано **H2 у файловому режимі** (`jdbc:h2:file:./data/pizzeria`): не потрібно встановлювати окремий сервер БД, а дані зберігаються між запусками. За бажанням URL можна змінити на PostgreSQL у `application.properties`.
+Потрібні **JDK 21+** і **Maven 3.9+** (у репозиторії є Maven Wrapper: `mvnw.cmd` / `./mvnw`). Окремо встановлювати H2 не потрібно — драйвер підтягується Maven-ом.
+
+```bash
+# Зібрати проєкт
+mvn compile
+
+# Запустити демонстрацію ЛР №10 (JdbcDemo)
+mvn exec:java
+
+# Запустити старий інтерактивний сценарій ЛР №1–9
+mvn exec:java -Dexec.mainClass=ua.edu.pizzeria.Main
+
+# Зібрати виконуваний jar із залежностями
+mvn package
+java -jar target/pizzeria-system-1.0.0.jar
+```
+
+Під час першого запуску H2 створює файл `data/pizzeria.mv.db`, а `DatabaseInitializer` виконує `init.sql`. Щоб почати з чистої БД, зупиніть програму й видаліть каталог `data/`.
+
+Параметри підключення не зашиті в код і знаходяться у `src/main/resources/application.properties`:
+
+```properties
+db.url=jdbc:h2:file:./data/pizzeria;DB_CLOSE_ON_EXIT=FALSE
+db.username=sa
+db.password=
+db.driver=org.h2.Driver
+db.pool.maximumPoolSize=10
+```
+
+### Сутності та схема БД (ЛР10)
+
+Обрано **H2 у файловому режимі**. Зв'язок «один до багатьох»: одна піца з меню може бути в багатьох замовленнях. У наявній моделі `Order` немає окремого `pizzaId`, тому назва піци виступає природним зовнішнім ключем (`orders.name -> pizzas.name`).
 
 ```mermaid
 erDiagram
@@ -198,236 +155,176 @@ erDiagram
 | Таблиця | Поле | Обмеження |
 |---|---|---|
 | `pizzas` | `id` | `PRIMARY KEY` |
-| `pizzas` | `name` | `NOT NULL`, `UNIQUE` (назва піци в меню унікальна) |
-| `pizzas` | `price` | `NUMERIC(10,2)`, `CHECK (price > 0)` — гроші не зберігаються як `FLOAT` |
+| `pizzas` | `name` | `NOT NULL`, `UNIQUE` |
+| `pizzas` | `price` | `NUMERIC(10,2)`, `CHECK (price > 0)` |
 | `pizzas` | `diameter_cm` | `NOT NULL`, `CHECK (diameter_cm > 0)` |
 | `orders` | `id` | `PRIMARY KEY` |
-| `orders` | `name` | `NOT NULL`, `FOREIGN KEY -> pizzas(name)` |
+| `orders` | `name` | `NOT NULL`, `FK -> pizzas(name)` |
 | `orders` | `quantity` | `NOT NULL`, `CHECK (quantity > 0)` |
 | `orders` | `extra_sauce` | `NOT NULL` |
 
-Зв'язок «один до багатьох»: одна піца з меню може бути в багатьох замовленнях. У наявній моделі `Order` немає окремого `pizzaId`, тому назва піци виступає природним зовнішнім ключем. Це дозволило **не змінювати** ні `Order`, ні інтерфейси сервісів.
+**`ON DELETE RESTRICT`** обрано свідомо: не можна видалити піцу з меню, поки на неї посилаються замовлення. Інакше історія замовлень втратила б сенс.
 
-**`ON DELETE RESTRICT`** обрано свідомо: не можна видалити піцу з меню, поки на неї посилаються замовлення. Інакше історія замовлень втратила б сенс, а рядки `orders` стали б «сиротами». Якщо піцу треба прибрати, спочатку переносять або видаляють її замовлення. `ON UPDATE CASCADE` дозволяє перейменувати піцу, не ламаючи зв'язки.
+### Рівень 1 — Maven + JDBC + CRUD
 
-## Запуск з нуля
+- `pom.xml`: `groupId=ua.edu.pizzeria`, `artifactId=pizzeria-system`, `version=1.0.0`, `maven.compiler.release=21`, `UTF-8`.
+- Залежності: `com.h2database:h2`, `com.zaxxer:HikariCP`, `slf4j-api` + `slf4j-simple`.
+- `JdbcPizzaService implements PizzaService`: `findById`, `findAll`, `save`, `deleteById`, `findAllSorted`, `findAllSortedByNameAndByPrice`.
+- `DBConnection` — Singleton над `HikariDataSource`; параметри у `application.properties`.
+- Усі записи — тільки `PreparedStatement` + try-with-resources; `findById` кидає `EntityNotFoundException`.
+- `init.sql` ідемпотентний (`CREATE TABLE IF NOT EXISTS`, `MERGE ... KEY`).
 
-Потрібні **JDK 21+** і **Maven 3.9+**. Окремо встановлювати H2 не потрібно: драйвер підтягується Maven-ом.
+### Рівень 2 — Зв'язані сутності, транзакції, ініціалізація
+
+- `JdbcOrderService` з таблицею `orders` і сортуванням через `ORDER BY name, quantity`.
+- `DatabaseInitializer` виконує `init.sql` при старті (ідемпотентно).
+- `JdbcOrderPlacementService.createPizzaWithOrder` — транзакція на дві таблиці (`setAutoCommit(false)`, `commit`, `rollback`) з демонстрацією відкату.
+- Порівняння SQL-ін'єкції (`PreparedStatement` безпечний; небезпечний варіант лише в README).
+- ER-діаграма та інструкція запуску — вище.
+
+### Рівень 3 — Узагальнення та пул з'єднань
+
+- `AbstractJdbcCrudService<T>` за патерном Template Method; `JdbcOrderService` реалізовано через нього.
+- Один спільний `Connection` — проблема (багатопотоковість, транзакції різних клієнтів, розрив з'єднання); `DBConnection` тримає `DataSource` (HikariCP pool).
+- Пакетна вставка `addBatch`/`executeBatch` (~4,5–5,7× швидше на 1000 рядків).
+- Пагінація `LIMIT/OFFSET`; `findAll()` без обмежень небезпечний на великій таблиці.
+
+---
+
+# Лабораторна робота №11: Робота з БД через Hibernate ORM (Jakarta Persistence)
+
+Гілка: **`lr11/hibernate-orm`**. Pull Request створюється в `main` і **не зливається**.
+
+У цій роботі додано **третю реалізацію** тих самих інтерфейсів `CRUDService` / `PizzaService` / `OrderService` — на Hibernate ORM. Клієнтський код не змінюється; змінюється лише обрана реалізація сервісу. Схема БД залишається тією, що створена в ЛР №10 (`init.sql`); Hibernate її лише перевіряє (`hibernate.hbm2ddl.auto=validate`).
+
+### Запуск демонстрації ЛР №11
 
 ```bash
-# 1. Зібрати проєкт
 mvn compile
-
-# 2. Запустити демонстрацію ЛР №10 (JdbcDemo — основна точка входу)
 mvn exec:java
-
-# 3. Запустити старий інтерактивний сценарій ЛР №1–6
-mvn exec:java -Dexec.mainClass=ua.edu.pizzeria.Main
-
-# 4. Зібрати виконуваний jar разом із залежностями
-mvn package
-java -jar target/pizzeria-system-1.0.0.jar
 ```
 
-Якщо Maven не встановлений глобально, у репозиторії є Maven Wrapper: замініть `mvn` на `./mvnw` (Linux/macOS) або `mvnw.cmd` (Windows). Наприклад:
+За замовчуванням `exec.mainClass=ua.edu.pizzeria.HibernateDemo`. Можна також запустити стару точку входу:
 
 ```bash
-./mvnw compile
-./mvnw exec:java
+mvn exec:java -Dexec.mainClass=ua.edu.pizzeria.Main
 ```
 
-Під час першого запуску H2 сама створює файл `data/pizzeria.mv.db`, а `DatabaseInitializer` виконує `init.sql`. Щоб почати з чистої БД, зупиніть програму й видаліть каталог `data/`.
+## Сутності та відображення
 
-Параметри підключення не зашиті в код і знаходяться у `src/main/resources/application.properties`:
-
-```properties
-db.url=jdbc:h2:file:./data/pizzeria;DB_CLOSE_ON_EXIT=FALSE
-db.username=sa
-db.password=
-db.driver=org.h2.Driver
-db.pool.maximumPoolSize=10
-```
-
-Будь-який параметр можна перевизначити системною властивістю, наприклад `mvn exec:java -Ddb.url=jdbc:h2:file:./data/other`.
-
-> Якщо у Windows-консолі замість кирилиці з'являються знаки питання, виконайте `chcp 65001` перед запуском або запускайте з IDE з кодуванням UTF-8.
-
-## Рівень 1. Maven + JDBC + CRUD для Pizza
-
-- `pom.xml` містить коректні `groupId=ua.edu.pizzeria`, `artifactId=pizzeria-system`, `version=1.0.0`, `maven.compiler.release=21` і `UTF-8`.
-- Залежності: `com.h2database:h2` (JDBC-драйвер), `com.zaxxer:HikariCP` (пул), `slf4j-api` + `slf4j-simple` (логування Hikari).
-- `JdbcPizzaService implements PizzaService` реалізує `findById`, `findAll`, `save`, `deleteById`, `findAllSorted`, `findAllSortedByNameAndByPrice`.
-- `save` спочатку виконує `UPDATE ... WHERE id = ?`; якщо жодного рядка не оновлено — `INSERT`. Тому один метод і додає, і оновлює запис.
-- Якщо `findById` не знайшов рядок, кидається `EntityNotFoundException`.
-- Усі запити — тільки `PreparedStatement`; `Connection`, `PreparedStatement` і `ResultSet` закриваються через try-with-resources.
+Спільні поля (`id`, `name`) винесені у `@MappedSuperclass BaseEntity` (як у ЛР №7):
 
 ```java
-@Override
-public Pizza findById(long id) {
-    String sql = "SELECT id, name, price, diameter_cm FROM pizzas WHERE id = ?";
-    try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement(sql)) {
-        statement.setLong(1, id);
-        try (ResultSet resultSet = statement.executeQuery()) {
-            if (!resultSet.next()) throw new EntityNotFoundException(id);
-            return mapRow(resultSet);
-        }
-    } catch (SQLException exception) {
-        throw new DataAccessException("Помилка пошуку піци з id=" + id, exception);
-    }
+@MappedSuperclass
+public abstract class BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private long id;
+
+    @Column(name = "name", nullable = false, length = 120)
+    private String name;
+    // getters / setters / equals / hashCode за бізнес-ключем (name)
 }
 ```
 
-`DBConnection` — Singleton з приватним конструктором і статичним екземпляром. Він віддає з'єднання з пулу, а не одне спільне `Connection`:
+**`Pizza`** (`@Entity @Table(name="pizzas")`) — не final, має конструктор без параметрів, обмеження колонок відповідають `init.sql` (`price` як `BigDecimal` для `NUMERIC(10,2)`):
 
 ```java
-public final class DBConnection {
-    private static final DBConnection INSTANCE = new DBConnection();
-    private final HikariDataSource dataSource;
+@Entity
+@Table(name = "pizzas")
+public class Pizza extends BaseEntity {
+    @Column(name = "price", nullable = false, precision = 10)
+    private BigDecimal price;
+    @Column(name = "diameter_cm", nullable = false)
+    private int diameterCm;
 
-    private DBConnection() { /* читає application.properties, створює HikariDataSource */ }
+    @OneToMany(mappedBy = "pizza", fetch = FetchType.LAZY,
+               cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> orders = new ArrayList<>();
 
-    public static DBConnection getInstance() { return INSTANCE; }
-    public Connection getConnection() throws SQLException { return dataSource.getConnection(); }
+    public void addOrder(Order order) { ... } // узгоджує обидві сторони
+    public void removeOrder(Order order) { ... }
 }
 ```
 
-## Рівень 2. Зв'язані сутності, транзакції, ініціалізація
-
-### Друга сутність і сортування через SQL
-
-`JdbcOrderService` працює з таблицею `orders`, пов'язаною з `pizzas` зовнішнім ключем. Метод `findAllSortedByNameAndByQuantity()` не сортує колекцію в Java, а делегує сортування БД:
+**`Order`** (`@Entity @Table(name="orders")`) — власник зв'язку «один до багатьох»:
 
 ```java
-SELECT id, name, quantity, extra_sauce FROM orders ORDER BY name, quantity
-```
+@Entity
+@Table(name = "orders")
+@AttributeOverride(name = "name",
+    column = @Column(name = "name", nullable = false, length = 120, insertable = false, updatable = false))
+public class Order extends BaseEntity {
+    @Column(name = "quantity", nullable = false)
+    private int quantity;
+    @Column(name = "extra_sauce", nullable = false)
+    private boolean extraSauce;
 
-Перетворення рядка `ResultSet` на об'єкт винесено в окремий `mapRow(ResultSet)`, тому воно не дублюється між `findById`, `findAll` і сортуванням.
-
-### Автоматична ідемпотентна ініціалізація
-
-`DatabaseInitializer.initialize()` викликається на початку `JdbcDemo.main` і виконує `init.sql` з classpath. Скрипт ідемпотентний:
-
-- `CREATE TABLE IF NOT EXISTS ...` — повторний запуск не падає;
-- `MERGE INTO pizzas ... KEY (id)` — стартові рядки оновлюються, а не дублюються;
-- демонстраційні дані мають фіксовані id і видаляються на початку кожного запуску.
-
-### Транзакція на дві таблиці
-
-`JdbcOrderPlacementService.createPizzaWithOrder(pizza, order)` вставляє піцу в `pizzas`, а потім замовлення в `orders`. Обидві зміни виконуються в одній транзакції:
-
-```java
-connection.setAutoCommit(false);
-try {
-    insertPizza(connection, pizza);
-    insertOrder(connection, order);
-    connection.commit();
-} catch (SQLException exception) {
-    connection.rollback();
-    throw new DataAccessException("Транзакцію скасовано (rollback)", exception);
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "name", referencedColumnName = "name", nullable = false)
+    private Pizza pizza;
 }
 ```
 
-Демонстрація:
+**Власником зв'язку є бік `Order`**, бо стовпець-зовнішній ключ `orders.name` належить таблиці `orders`. Інверсний бік (`Pizza.orders`) позначено `mappedBy = "pizza"`.
 
-1. Успішний випадок: піца `id=1101` і замовлення `id=2101` зберігаються разом.
-2. Випадок з відкатом: друга вставка навмисно посилається на неіснуючу піцу й порушує `FOREIGN KEY`. `rollback()` скасовує **обидві** вставки, тому піца `id=1102`, додана першою, у БД не залишається.
+Допоміжні методи `addOrder` / `removeOrder` підтримують обидві сторони зв'язку узгодженими (додають/прибирають замовлення з колекції піци й встановлюють/очищають посилання на піцу у замовленні).
 
-Фрагмент консольного виводу:
+**Стратегія завантаження:** `LAZY` для `@OneToMany` і `@ManyToOne` — завантажує пов'язані об'єкти лише при першому доступі, уникając зайвих запитів.
 
-```text
-Успішний commit: піца id=1101 та замовлення id=2101 збережені.
-Тепер навмисно порушуємо FOREIGN KEY у другій вставці...
-Очікувана помилка: Транзакцію скасовано (rollback): піцу та замовлення не збережено
-Rollback підтверджено: Сутність з id=1102 не знайдена
-```
+**Cascade / orphanRemoval:** `CascadeType.ALL` + `orphanRemoval = true` на `Pizza.orders`. ОбҰнтування: при видаленні піци її замовлення теж вилучаються (замовлення без піци не мають сенсу, а зв'язок через `name` не може бути `NULL` без порушення `NOT NULL` у `orders`).
 
-### SQL-ін'єкція: поганий і хороший приклади
+## persistence.xml
 
-**Поганий метод (навмисно НЕ доданий у робочу гілку, лише для пояснення):**
+Один persistence-unit `pizzeria-pu` у `src/main/resources/META-INF/persistence.xml`:
+- `hibernate.show_sql=true`, `hibernate.format_sql=true` — вивід SQL у консоль.
+- `hibernate.hbm2ddl.auto=validate` — Hibernate лише перевіряє відповідність сутностей схемі, створеній `init.sql`.
+- Параметри підключення (H2, `sa` без паролю) і діалект `H2Dialect`.
 
-```java
-// НЕ РОБІТЬ ТАК: рядок користувача склеюється з SQL
-public List<Pizza> findByNameUnsafe(String name) {
-    String sql = "SELECT id, name, price, diameter_cm FROM pizzas WHERE name = '" + name + "'";
-    try (Connection connection = dataSource.getConnection();
-         Statement statement = connection.createStatement();
-         ResultSet resultSet = statement.executeQuery(sql)) {
-        // ...
-    }
-}
-```
+## JpaUtil (Singleton)
 
-Якщо передати `' OR '1'='1`, запит стане `... WHERE name = '' OR '1'='1'`, і метод поверне **всі** піци. Ще небезпечніший варіант — `'; DROP TABLE pizzas; --`.
+Створює `EntityManagerFactory` один раз (статичне ініціалізування). Надає методи:
+- `inTransaction(action)` — `EntityManager` на кожну операцію, `begin` → дія → `commit`, при помилці — `rollback`, `EM` закривається в `finally`.
+- `readOnly(action)` — читання без транзакції; `EM` закривається після виходу.
 
-**Хороший метод у робочій гілці (`JdbcPizzaService.findByName`):**
+`EntityManager` створюється на кожну операцію й закривається після неї — це уникає проблем із закритим контекстом persistence.
 
-```java
-String sql = "SELECT id, name, price, diameter_cm FROM pizzas WHERE name = ?";
-try (PreparedStatement statement = connection.prepareStatement(sql)) {
-    statement.setString(1, name); // значення передається окремо від SQL-тексту
-    ...
-}
-```
+## Сервіси на Hibernate
 
-`PreparedStatement` спочатку компілює запит із плейсхолдером, а потім передає значення як дані. Тому `' OR '1'='1` шукається як звичайний рядок. Демонстрація в консолі:
+- `HibernatePizzaService implements PizzaService` — `findById`, `save` (додавання або оновлення за `id`), `delete`, `findAllSortedByName`, `findAllSortedByNameAndByPrice` (JPQL `ORDER BY`), `findByName` (іменований параметр), `findPage` (`setFirstResult`/`setMaxResults`).
+- `HibernateOrderService implements OrderService` — аналогічно для `Order`, плюс `findByPizzaName` (іменований параметр) та пагінація.
+- `findById` / `delete` кидають `EntityNotFoundException` з ЛР №7, якщо запису немає.
 
-```text
-Звичайний пошук 'Маргарита': знайдено 1
-Спроба ін'єкції findByName("' OR '1'='1"): знайдено 0 (рядок сприйнято як дані, а не як SQL)
-```
+## Рівень 3 — JPQL
 
-## Рівень 3. Узагальнення та пул з'єднань
+Всі запити використовують іменовані параметри (без склеювання рядків):
 
-### AbstractJdbcCrudService (Template Method)
+- `findAllSortedByNameAndByPrice()` → `SELECT p FROM Pizza p ORDER BY p.name, p.price`
+- `findAllSortedByNameAndByQuantity()` → `SELECT o FROM Order o ORDER BY o.name, o.quantity`
+- `findByName(String name)` → `WHERE p.name = :name`
+- `findByPizzaName(String pizzaName)` → `WHERE o.pizza.name = :pizzaName`
+- `findPage(offset, limit)` → `setFirstResult(offset)`, `setMaxResults(limit)`
 
-`AbstractJdbcCrudService<T extends BaseEntity>` містить незмінний «скелет» CRUD-операцій, а підклас надає лише:
+## Проблеми та їх виправлення (демонструються у `HibernateDemo`)
 
-- `sqlFindById()`, `sqlFindAll()`, `sqlInsert()`, `sqlUpdate()`, `sqlDelete()`;
-- `mapRow(ResultSet)`;
-- `setParameters(PreparedStatement, T)`.
+**1. `LazyInitializationException`.** Доступ до лінивої колекції `Pizza.orders` або проксі `Order.pizza` після закриття `EntityManager` кидає `org.hibernate.LazyInitializationException`. Демонстрація ловить виняток, а потім виправлення — працювати зі зв'язком всередині відкритого `EntityManager` (`JpaUtil.inTransaction` / `readOnly`).
 
-Друга сутність (`JdbcOrderService`) реалізована вже через цей абстрактний клас і не містить дубльованого коду роботи з `Connection`/`ResultSet`.
-
-### Чому один спільний Connection — проблема
-
-Singleton, що повертає **одне** `Connection`, небезпечний у кількох сценаріях:
-
-1. **Багатопотоковість.** Два потоки не можуть одночасно використовувати одне з'єднання: JDBC-виклики не є потокобезпечними, результати запитів переплутаються.
-2. **Транзакції різних клієнтів.** `setAutoCommit(false)` одного клієнта впливає на іншого; `commit()`/`rollback()` скасовують чужі зміни.
-3. **Розрив з'єднання.** Після мережевої помилки єдине з'єднання стає непридатним, і весь застосунок втрачає доступ до БД.
-4. **Продуктивність.** Запити виконуються послідовно, немає повторного використання з'єднань і паралелізму.
-
-Тому `DBConnection` тримає **`DataSource` (HikariCP pool)**, а не `Connection`. Кожен виклик `getConnection()` отримує окреме з'єднання з пулу, а після `close()` воно повертається в пул. Пул потокобезпечний, обмежує кількість з'єднань і автоматично перевіряє їхню працездатність.
-
-### Пакетна вставка: вимірювання
-
-`JdbcBatchDemo` вставляє 1000 піц двома способами: по одному `executeUpdate()` та через `addBatch()`/`executeBatch()` (пакетами по 100). Результат на тестовій машині (Windows 10, JDK 21, H2 у файловому режимі):
-
-| Спосіб | Час на 1000 записів |
-|---|---:|
-| По одному `executeUpdate()` | ~170–275 мс |
-| `addBatch()` + `executeBatch()` | ~38–48 мс |
-| Прискорення | **~4,5–5,7×** |
-
-Час залежить від машини й диска, але пакетна вставка стабільно швидша, бо зменшує кількість окремих звернень до БД.
-
-### Посторінкове читання
-
-`AbstractJdbcCrudService.findPage(offset, limit)` і `JdbcPizzaService.findPage(offset, limit)` використовують:
+**2. Проблема N+1.** Завантаження списку замовлень (1 запит) і обхід `getPizza()` у циклі призведе до ще одного запиту на кожне замовлення (N+1 загалом). Виправлення — `JOIN FETCH`:
 
 ```sql
-SELECT ... FROM pizzas ORDER BY id LIMIT ? OFFSET ?
+SELECT o FROM Order o JOIN FETCH o.pizza
 ```
 
-`findAll()` без обмежень небезпечний на великій таблиці: він завантажує **всі** рядки в пам'ять, створює величезну кількість об'єктів, збільшує навантаження на мережу та heap і може призвести до `OutOfMemoryError` або зависання інтерфейсу. Для великих таблиць треба читати сторінками (або потоково), а не тягнути всю таблицю.
+— 1 запит замість N+1. У демонстрації виводиться кількість SQL-запитів до й після виправлення.
 
-## Що демонструє JdbcDemo
+## Показ помилки валідації схеми
 
-1. Той самий клієнтський код працює з `InMemoryPizzaService` і `JdbcPizzaService` — змінюється лише реалізація.
-2. CRUD для піци: додавання, оновлення, пошук, сортування через `ORDER BY`, видалення, `EntityNotFoundException`.
-3. Друга сутність `Order` із зовнішнім ключем і сортуванням у SQL.
-4. Транзакція на дві таблиці з успішним `commit` і показаним `rollback`.
-5. Безпечний пошук проти SQL-ін'єкції.
-6. Пакетна вставка з вимірюванням часу.
-7. Пагінація через `LIMIT/OFFSET`.
+Клас `HibernateValidateDemo` створює `EntityManagerFactory` зі сутністю `PizzaMismatch`, у які є поле `phone`, якого немає в таблиці `pizzas`. Przy `hibernate.hbm2ddl.auto=validate` Hibernate кидає `SchemaManagementException` ще на етапі створення фабрики — показується, що Hibernate скаржиться на розбіжність між сутністю й таблицею.
+
+## Перевірка
+
+- `mvn clean compile` — успіх (49+ джерел).
+- `mvn exec:java` — повний цикл: створення → читання → оновлення → видалення, зв'язки Pizza/Order, JPQL-запити, LazyInitializationException та його виправлення, N+1 та JOIN FETCH.
+- `mvn exec:java -Dexec.mainClass=ua.edu.pizzeria.HibernateValidateDemo` — очікувана помилка валідації сховища.
+- Попередні лабораторні (`Main`) все ще працюють без змін у клієнтському коді.

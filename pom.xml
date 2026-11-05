@@ -20,10 +20,11 @@
         <h2.version>2.3.232</h2.version>
         <hikaricp.version>5.1.0</hikaricp.version>
         <slf4j.version>2.0.16</slf4j.version>
+        <hibernate.version>6.5.2.Final</hibernate.version>
 
         <!-- Default entry point for `mvn exec:java`.
              Override it with: mvn exec:java -Dexec.mainClass=ua.edu.pizzeria.Main -->
-        <exec.mainClass>ua.edu.pizzeria.JdbcDemo</exec.mainClass>
+        <exec.mainClass>ua.edu.pizzeria.HibernateDemo</exec.mainClass>
     </properties>
 
     <dependencies>
@@ -41,8 +42,7 @@
             <version>${hikaricp.version}</version>
         </dependency>
 
-        <!-- SLF4J API + binding so that HikariCP writes its logs instead of a no-op warning.
-             slf4j-api is pinned explicitly to 2.0.x because HikariCP 5.1 pulls the older 1.7.36. -->
+        <!-- SLF4J API + binding so that HikariCP writes its logs instead of a no-op warning. -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -52,6 +52,13 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- Hibernate ORM (Jakarta Persistence) -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${hibernate.version}</version>
         </dependency>
     </dependencies>
 
